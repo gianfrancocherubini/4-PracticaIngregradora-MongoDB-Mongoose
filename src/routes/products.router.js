@@ -66,7 +66,6 @@ router.get('/:pid', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const newProductData = req.body;
-
         const requiredFields = ['title', 'description', 'price', 'thumbnails', 'code', 'stock', 'category'];
         for (const field of requiredFields) {
             if (!newProductData[field]) {
@@ -85,169 +84,55 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Error al agregar el producto.' });
     }
 });
-// router.put('/:pid', async (req, res) => {
-//     try {
-//         const productId = req.params.pid;
-//         const {
-//             title,
-//             description,
-//             price, 
-//             thumbnails,
-//             code,
-//             stock,
-//             status,
-//             category
-//         } = req.body;
 
-//         if (!productId || isNaN(productId)) {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El ID de producto no es un número válido' });
-//             return;
-//         }
+router.put('/:pid', async (req, res) => {
+    try {
+        const productId = req.params.pid;
+        const updatedProductData = req.body;
 
-//         const productos = await pm.getProducts();
-//         const productIndex = productos.findIndex(product => product.id === parseInt(productId, 10));
+        const existingProduct = await productsManager.getProductById(productId);
 
-//         if (productIndex === -1) {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(404).json({ error: 'Producto no encontrado' });
-//             return;
-//         }
+        if (!existingProduct) {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(404).json({ error: 'Producto no encontrado.' });
+            return;
+        }
 
-//         let propiedadesPermitidas=["title","description","price","thumbnails","code","stock","status","category"];
-//         let propiedadesQueLlegan=Object.keys(req.body);
-//         let valido=propiedadesQueLlegan.every(propiedad=>propiedadesPermitidas.includes(propiedad))
-//         if(!valido){
-//             res.setHeader('Content-Type', 'application/json')
-//             return res.status(400).json({error:`No se aceptan algunas propiedades`, propiedadesPermitidas })
+        const fieldsToUpdate = ['title', 'description', 'price', 'thumbnails', 'code', 'stock', 'category','deleted'];
+        const updateData = {};
+        for (const field of fieldsToUpdate) {
+            if (updatedProductData[field] !== undefined) {
+                updateData[field] = updatedProductData[field];
+            }
+        }
 
-//         }
+        if (updatedProductData._id !== productId) {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).json({ error: "No se permite modificar el ID del producto." });
+            return;
+        }
 
-//         // Validación de campos
-//         if (title && typeof title !== 'string') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo title debe ser una cadena de texto' });
-//             return;
-//         }
+        const productSchemaKeys = Object.keys(ProductEsquema.schema.paths);
 
-//         if (description && typeof description !== 'string') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo description debe ser una cadena de texto' });
-//             return;
-//         }
+        const invalidFields = Object.keys(updatedProductData).filter(field => {
+            return !productSchemaKeys.includes(field) || typeof updatedProductData[field] !== ProductEsquema.schema.paths[field].instance;
+        });
+        if (invalidFields.length > 0) {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).json({ error: `Campos no permitidos o de tipo incorrecto: ${invalidFields.join(', ')}` });
+            return;
+        }
+        
+        Object.assign(existingProduct, updateData);
 
-//         if (code && typeof code !== 'string') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo code debe ser una cadena de texto' });
-//             return;
-//         }
-
-//         if (category && typeof category !== 'string') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo category debe ser una cadena de texto' });
-//             return;
-//         }
-
-//         if (price && typeof price !== 'number') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo price debe ser un número' });
-//             return;
-//         }
-
-//         if (stock && typeof stock !== 'number') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo stock debe ser un número' });
-//             return;
-//         }
-
-//         if (status && typeof status !== 'boolean') {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El campo stock debe ser un valor booleano' });
-//             return;
-//         }
-
-//         if (thumbnails) {
-//             if (!Array.isArray(thumbnails) || !thumbnails.every(url => typeof url === 'string')) {
-//                 res.setHeader('Content-Type', 'application/json');
-//                 res.status(400).json({ error: 'El campo thumbnails debe ser un array de cadenas de texto que contienen las rutas de las imágenes' });
-//                 return;
-//             }
-//         }
-
-//         // Actualización de campos
-//         if (title) {
-//             productos[productIndex].title = title;
-//         }
-
-//         if (description) {
-//             productos[productIndex].description = description;
-//         }
-
-//         if (price) {
-//             productos[productIndex].price = price;
-//         }
-
-//         if (thumbnails) {
-//             productos[productIndex].thumbnails = thumbnails;
-//         }
-
-//         if (code) {
-//             productos[productIndex].code = code;
-//         }
-
-//         if (stock) {
-//             productos[productIndex].stock = stock;
-//         }
-
-//         if (status) {
-//             productos[productIndex].status = status;
-//         }
-
-//         if (category) {
-//             productos[productIndex].category = category;
-//         }
-
-//         await pm.saveProducts(productos);
-//         console.log("Producto actualizado correctamente.");
-//         res.setHeader('Content-Type', 'application/json');
-//         res.status(200).json({ product: productos[productIndex] });
-//     } catch (error) {
-//         console.error("Error al actualizar el producto: ", error);
-//         res.setHeader('Content-Type', 'application/json');
-//         res.status(500).json({ error: 'Error al actualizar el producto' });
-//     }
-// });
-
-// router.delete('/:pid', async (req, res) => {
-//     try {
-//         const productId = req.params.pid;
-
-//         if (isNaN(productId)) {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(400).json({ error: 'El ID de producto no es un número válido' });
-//             return;
-//         }
-
-//         const productos = await pm.getProducts();
-//         const productIndex = productos.findIndex(product => product.id === parseInt(productId, 10));
-
-//         if (productIndex === -1) {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(404).json({ error: 'Producto no encontrado' });
-//             return;
-//         }
-
-//         productos.splice(productIndex, 1);
-
-//         await pm.saveProducts(productos);
-//         console.log("Producto eliminado correctamente.");
-//         res.setHeader('Content-Type', 'application/json');
-//         res.status(200).json({ message: 'Producto eliminado correctamente' });
-//     } catch (error) {
-//         console.error("Error al eliminar el producto: ", error);
-//         res.setHeader('Content-Type', 'application/json');
-//         res.status(500).json({ error: 'Error al eliminar el producto' });
-//     }
-// });
+        await productsManager.saveProducts([existingProduct]);
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).json({ success: true, message: 'Producto actualizado correctamente.' });
+    } catch (error) {
+        console.error(error);
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).json({ error: 'Error al actualizar el producto.' });
+    }
+});
 
 module.exports = {router} ;
