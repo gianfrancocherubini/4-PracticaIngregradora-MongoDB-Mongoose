@@ -1,7 +1,6 @@
 const {Router}=require('express')
 const ProductsManager = require('../dao/productsManagerMongo');
-const ProductEsquema = require('../dao/models/products.model');
-
+const productEsquema = require('../dao/models/products.model')
 const productsManager =new ProductsManager()
 
 const router=Router()
@@ -14,7 +13,6 @@ router.get('/', async (req, res) => {
         if (!products || products.length === 0) {
             res.setHeader('Content-Type', 'application/json');
             res.status(200).json({ Products: [] });
-            console.log("No hay productos en la base de datos.");
             return;
         }
 
@@ -33,6 +31,8 @@ router.get('/', async (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.status(500).json({ error: 'Error al obtener productos' });
     }
+
+    
 });
 
 router.get('/:pid', async (req, res) => {
@@ -42,6 +42,7 @@ router.get('/:pid', async (req, res) => {
         if (!productId) {
             res.setHeader('Content-Type', 'application/json');
             res.status(400).json({ error: 'Se debe proporcionar un ID de producto válido.' });
+            console.log('Se debe proporcionar un ID de producto válido.');
             return;
         }
 
@@ -55,7 +56,6 @@ router.get('/:pid', async (req, res) => {
 
         res.setHeader('Content-Type', 'application/json');
         res.status(200).json({ Product: product });
-        console.log('Producto encontrado:', product);
     } catch (error) {
         console.error(error);
         res.setHeader('Content-Type', 'application/json');
@@ -75,6 +75,15 @@ router.post('/', async (req, res) => {
             }
         }
 
+        const existingProducts = await productsManager.getProducts();
+        const existingProduct = existingProducts.find(product => product.code === newProductData.code);
+
+        if (existingProduct) {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).json({ error: `Ya existe un producto con el código '${newProductData.code}'.` });
+            return;
+        }
+
         await productsManager.saveProducts([newProductData]);
         res.setHeader('Content-Type', 'application/json');
         res.status(201).json({ success: true, message: 'Producto agregado correctamente.' });
@@ -87,9 +96,9 @@ router.post('/', async (req, res) => {
 
 router.put('/:pid', async (req, res) => {
     try {
-        const productId = req.params.pid;
-        const updatedProductData = req.body;
 
+        const productId = req.params.pid;
+        
         const existingProduct = await productsManager.getProductById(productId);
 
         if (!existingProduct) {
@@ -98,41 +107,26 @@ router.put('/:pid', async (req, res) => {
             return;
         }
 
-        const fieldsToUpdate = ['title', 'description', 'price', 'thumbnails', 'code', 'stock', 'category','deleted'];
-        const updateData = {};
-        for (const field of fieldsToUpdate) {
-            if (updatedProductData[field] !== undefined) {
-                updateData[field] = updatedProductData[field];
-            }
+        if(req.body._id){
+            res.setHeader('Content-Type','application/json');
+            return res.status(500).json({error:`No se puede modificar la porpiedad "_id"`});
         }
 
-        if (updatedProductData._id !== productId) {
+        const updateResult = await productEsquema.updateOne({ _id: productId }, { $set: req.body });
+        if (updateResult.modifiedCount > 0) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).json({ error: "No se permite modificar el ID del producto." });
-            return;
-        }
-
-        const productSchemaKeys = Object.keys(ProductEsquema.schema.paths);
-
-        const invalidFields = Object.keys(updatedProductData).filter(field => {
-            return !productSchemaKeys.includes(field) || typeof updatedProductData[field] !== ProductEsquema.schema.paths[field].instance;
-        });
-        if (invalidFields.length > 0) {
+            return res.status(200).json({ success: true, message: 'Modificación realizada.' });
+        } else {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).json({ error: `Campos no permitidos o de tipo incorrecto: ${invalidFields.join(', ')}` });
-            return;
+            return res.status(400).json({ error: 'No se concretó la modificación.' });
         }
-        
-        Object.assign(existingProduct, updateData);
 
-        await productsManager.saveProducts([existingProduct]);
-        res.setHeader('Content-Type', 'application/json');
-        res.status(200).json({ success: true, message: 'Producto actualizado correctamente.' });
     } catch (error) {
         console.error(error);
         res.setHeader('Content-Type', 'application/json');
         res.status(500).json({ error: 'Error al actualizar el producto.' });
     }
+
 });
 
 module.exports = {router} ;

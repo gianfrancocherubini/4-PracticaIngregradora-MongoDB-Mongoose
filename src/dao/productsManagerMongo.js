@@ -4,10 +4,20 @@ class ProductsManager {
     
     async getProducts() {
         try {
-            const products = await ProductEsquema.find().exec();
+            const products = await ProductEsquema.find({deleted:false}).exec();
             return products;
         } catch (error) {
-            console.error("Error al obtener productos:", error);
+            console.log("No hay productos en la base de datos.");
+            throw error;
+        }
+    }
+
+    async getProductsActive() {
+        try {
+            const products = await ProductEsquema.findOne({deleted:false,_id:pid}).exec();
+            return products;
+        } catch (error) {
+            console.log("No hay productos activos");
             throw error;
         }
     }
@@ -21,9 +31,9 @@ class ProductsManager {
         }
     }
 
-    async getProductById(id) {
+    async getProductById(productId) {
         try {
-            const product = await ProductEsquema.findById(id).exec();
+            const product = await ProductEsquema.findOne({deleted:false, _id:productId}).exec();
 
             if (product) {
                 console.log("El producto encontrado es:", product);
@@ -37,6 +47,8 @@ class ProductsManager {
             throw error;
         }
     }
+
+   
 }
 
 module.exports = ProductsManager;
