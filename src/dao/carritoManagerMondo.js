@@ -1,20 +1,24 @@
-const fsPromises = require('fs');
-const path = require('path');
+const CartsEsquema = require('./models/carrito.model');
 
 class CarritoManager {
     
-
     async getCart() {
-        if (fsPromises.existsSync(this.ruta)) {
-            const data = await fsPromises.promises.readFile(this.ruta, 'utf-8');
-            return JSON.parse(data);
-        } else {
-            return [];
+        try {
+            const productosCarrito = await CartsEsquema.find().exec();
+            return productosCarrito;
+        } catch (error) {
+            console.error("Error al obtener el carrito:", error);
+            throw error;
         }
     }
-    
+
     async saveCart(cart) {
-        await fsPromises.promises.writeFile(this.ruta, JSON.stringify(cart, null, 2));
+        try {
+            await CartsEsquema.create(cart);
+        } catch (error) {
+            console.error("Error al guardar el carrito:", error);
+            throw error;
+        }
     }
     
 }
