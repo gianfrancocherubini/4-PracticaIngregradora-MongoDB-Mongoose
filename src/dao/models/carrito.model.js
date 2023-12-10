@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
-const Product = require('./products.model');
 
 const cartsColeccion = 'carts';
 
 const cartItemSchema = new mongoose.Schema({
   product: {
-    type: Product.schema,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   quantity: {

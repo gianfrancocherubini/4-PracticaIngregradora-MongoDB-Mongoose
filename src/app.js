@@ -3,7 +3,7 @@ const routerCarrito = require('./routes/carrito.router');
 const { router } = require('./routes/products.router');
 const mongoose =require(`mongoose`)
 
-const PORT = 3009;
+const PORT = 3010;
 const app = express();
 
 app.use(express.json());
