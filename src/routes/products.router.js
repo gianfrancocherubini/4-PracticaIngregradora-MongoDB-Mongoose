@@ -86,7 +86,8 @@ router.post('/', async (req, res) => {
 
         await productsManager.saveProducts([newProductData]);
         res.setHeader('Content-Type', 'application/json');
-        res.status(201).json({ success: true, message: 'Producto agregado correctamente.' });
+        res.status(201).json({ success: true, message: 'Producto agregado correctamente.', newProductData });
+        console.log('Producto agregado:', newProductData);
     } catch (error) {
         console.error(error);
         res.setHeader('Content-Type', 'application/json');
