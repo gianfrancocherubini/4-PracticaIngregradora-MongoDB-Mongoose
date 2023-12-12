@@ -62,7 +62,7 @@ router.post('/:cid/product/:pid', async (req, res) => {
       }
   
       const updatedCart = await cm.addProductToCart(cartId, productId, quantity);
-      console.log()
+      console.log(`Producto : ${productId} agregado correctamente`)
       res.setHeader('Content-Type', 'application/json');
       res.status(200).json(updatedCart);
     } catch (error) {

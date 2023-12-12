@@ -44,28 +44,21 @@ class CarritoManager {
             throw new Error('Producto no encontrado.');
           }
     
-          // Verificar si el producto ya está en el carrito
-          const existingItem = cart.items.find(item => item.product.equals(productId));
+            const existingItem = cart.items.find(item => item.product.equals(productId));
     
           if (existingItem) {
-            // Si el producto ya está en el carrito, incrementar la cantidad
-            existingItem.quantity += quantity;
+              existingItem.quantity += quantity;
           } else {
-            // Si el producto no está en el carrito, agregar un nuevo elemento
-            cart.items.push({
+              cart.items.push({
               product: productId,
               quantity: quantity,
             });
           }
     
-          // Utilizar funciones específicas de MongoDB para guardar el carrito actualizado
           const filter = { _id: cart._id };
           const update = { items: cart.items };
           await CartsEsquema.findByIdAndUpdate(filter, update);
-    
-          // Obtener el carrito actualizado después de la actualización
           const updatedCart = await CartsEsquema.findById(cartId);
-    
           return updatedCart;
         } catch (error) {
           console.error('Error al agregar producto al carrito:', error);

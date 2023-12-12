@@ -12,16 +12,6 @@ class ProductsManager {
         }
     }
 
-    async getProductsActive() {
-        try {
-            const products = await ProductEsquema.findOne({deleted:false,_id:pid}).exec();
-            return products;
-        } catch (error) {
-            console.log("No hay productos activos");
-            throw error;
-        }
-    }
-
     async saveProducts(products) {
         try {
             await ProductEsquema.insertMany(products);
