@@ -48,13 +48,8 @@ class CarritoManager {
     
           if (existingItem) {
               existingItem.quantity += quantity;
-          } else {
-              cart.items.push({
-              product: productId,
-              quantity: quantity,
-            });
-          }
-    
+          } 
+
           const filter = { _id: cart._id };
           const update = { items: cart.items };
           await CartsEsquema.findByIdAndUpdate(filter, update);
