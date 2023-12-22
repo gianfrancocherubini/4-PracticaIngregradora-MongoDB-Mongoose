@@ -116,7 +116,7 @@ router.put('/:pid', async (req, res) => {
         const updateResult = await productEsquema.updateOne({ _id: productId }, { $set: req.body });
         if (updateResult.modifiedCount > 0) {
             res.setHeader('Content-Type', 'application/json');
-            return res.status(200).json({ success: true, message: 'Modificación realizada.' });
+            return res.status(200).json({ success: true, message: `Modificación realizada en producto ${productId}` });
         } else {
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).json({ error: 'No se concretó la modificación.' });

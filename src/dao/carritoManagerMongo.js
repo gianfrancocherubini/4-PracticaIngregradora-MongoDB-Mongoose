@@ -31,35 +31,42 @@ class CarritoManager {
     }
     
     async addProductToCart(cartId, productId, quantity) {
-        try {
-          const cart = await CartsEsquema.findById(cartId);
+      try {
+        const cart = await CartsEsquema.findById(cartId);
     
-          if (!cart) {
-            throw new Error('Carrito no encontrado.');
-          }
-    
-          const product = await ProductEsquema.findById(productId);
-    
-          if (!product) {
-            throw new Error('Producto no encontrado.');
-          }
-    
-            const existingItem = cart.items.find(item => item.product.equals(productId));
-    
-          if (existingItem) {
-              existingItem.quantity += quantity;
-          } 
-
-          const filter = { _id: cart._id };
-          const update = { items: cart.items };
-          await CartsEsquema.findByIdAndUpdate(filter, update);
-          const updatedCart = await CartsEsquema.findById(cartId);
-          return updatedCart;
-        } catch (error) {
-          console.error('Error al agregar producto al carrito:', error);
-          throw error;
+        if (!cart) {
+          throw new Error('Carrito no encontrado.');
         }
+    
+        const product = await ProductEsquema.findById(productId);
+    
+        if (!product) {
+          throw new Error('Producto no encontrado.');
+        }
+    
+        const existingItemIndex = cart.items.findIndex(item => item.product.equals(productId));
+    
+        if (existingItemIndex !== -1) {
+          // El producto ya existe en el carrito, actualiza la cantidad
+          cart.items[existingItemIndex].quantity += quantity || 1;
+        } else {
+          // El producto no existe en el carrito, agrégalo con la cantidad proporcionada o 1 por defecto
+          cart.items.push({
+            product: productId,
+            quantity: quantity || 1,
+          });
+        }
+    
+        // Llama a save para aplicar los cambios en la base de datos
+        await cart.save();
+    
+        const updatedCart = await CartsEsquema.findById(cartId);
+        return updatedCart;
+      } catch (error) {
+        console.error('Error al agregar producto al carrito:', error);
+        throw error;
       }
+    }
 }
 
     
